@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <title>SockJS Prototype</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="stylesheet" type="text/css" href="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.0.4/css/bootstrap-combined.min.css" media="all">
+  <style type="text/css">
+    body      { padding: 20px 0; line-height: 1.5em; }
+    header    { margin: 2em 0; }
+    h3        { margin: 1.5em 0 0.5em 0; }
+  </style>
+</head>
+<body>
+
+  <div id="container" class="container">
+    <header class="jumbotron subhead">
+      <h1>Hello SockJS!</h1>
+    </header>
+    <section id="content">
+      <p>Use Javascript console to test SockJS web sockets server.</p>
+
+      <h3>Available sockets</h3>
+      <p>The available websocket servers and their respective clients objects available from console:</p>
+      <ul>
+        <li>Echo server: <code>echoSocket</code></li>
+      </ul>
+
+      <h3>Sending message to the socket</h3>
+      <p>To send message to the web sockets server, use the send() method: <code>&lt;clientSocket&gt;.send("&lt;Your message here&gt;");</code></p>
+      <ul>
+        <li>Example: <code>echoSocket.send("Hello world");</code></li>
+      </ul>
+
+      <h3>Closing the socket</h3>
+      <p>To close the socket, use the close() method: <code>&lt;clientSocket&gt;.close();</code></p>
+      <ul>
+        <li>Example: <code>echoSocket.close();</code></li>
+      </ul>
+    </section>
+  </div>
+
+  <!-- Loading scripts -->
+  <script src="http://cdn.sockjs.org/sockjs-0.3.min.js"></script>
+  <script type="text/javascript">
+
+    // Client web socket module
+    ClientSocket = (function(uriProtocol, hostname, port){
+      var nodeProtocol = uriProtocol
+        , nodeHostname = hostname
+        , nodePort = port
+        , _getSocket
+        , _init
+        , _connectContacts
+        , _connectUser
+        ;
+
+      // ##### PRIVATE FUNCTIONS DEFINITIONS #####
+      
+      // Gets Socket URL for the particular service for the given sockedId on SockJS server
+      _getSocketUrl = function(socketId) {
+        var baseUri = nodeProtocol + '//' + nodeHostname + ":" + nodePort + "/"
+          , socketUrl = baseUri + socketId;
+        
+        return socketUrl;
+      };
+
+      // Initializes client socket
+      _getSocket = function(url, fnCallback) {
+        var options = {}
+          , clientSocket = new SockJS(url, undefined, options);
+
+        // ### connect event
+        clientSocket.onopen = function() {
+          window.console.log("[=== Socket Connected ===]");
+        };
+
+        // ### message event
+        clientSocket.onmessage = function(data){
+          fnCallback(data);
+        };
+
+        // ### disconnect event
+        clientSocket.onclose = function() {
+          window.console.log("[=== Socket Disconnected ===]");
+        };
+
+        // ### error event
+        clientSocket.on = 'error', function(error) {
+          window.console.log("[=== Socket Error ===] " + error);
+        };
+
+        return clientSocket; 
+      };
+
+
+      // ##### PUBLICLY EXPORTED FUNCTIONS DEFINITIONS #####
+
+      // creates socket connection to echo server
+      _connectEcho = function() {
+        var socketId = "echo"
+          , socketUrl = _getSocketUrl(socketId)
+          , fnCallback = function(data) {
+              window.console.log('[Callback]: ' + JSON.stringify(data));
+            };
+
+        return _getSocket(socketUrl, fnCallback);
+      };
+
+
+      // public interface for this module
+      return {
+          connectEcho : _connectEcho
+      };
+    }(window.document.location.protocol, window.document.location.hostname, window.document.location.port));
+
+    echoSocket = ClientSocket.connectEcho();
+  </script>
+</body>
+</html>
